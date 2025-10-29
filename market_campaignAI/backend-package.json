@@ -1,0 +1,21 @@
+{
+  "name": "campaign-ai-backend-test",
+  "version": "1.0.0",
+  "description": "Test backend server for Campaign AI frontend integration",
+  "main": "backend-test-server.js",
+  "scripts": {
+    "start": "node backend-test-server.js",
+    "dev": "nodemon backend-test-server.js"
+  },
+  "dependencies": {
+    "express": "^4.18.2",
+    "cors": "^2.8.5",
+    "jsonwebtoken": "^9.0.0"
+  },
+  "devDependencies": {
+    "nodemon": "^2.0.22"
+  },
+  "keywords": ["campaign-ai", "backend", "test", "api"],
+  "author": "Campaign AI Team",
+  "license": "MIT"
+}
