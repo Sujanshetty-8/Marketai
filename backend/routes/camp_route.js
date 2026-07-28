@@ -130,6 +130,8 @@ router.post('/:id/trackers', authMiddleware, async (req, res) => {
     // 5. Save the tracker to the database
     const tracker = await newTracker.save();
 
+    
+
     // 6. Send back the newly created tracker object
     res.status(201).json(tracker);
 
