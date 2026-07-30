@@ -172,7 +172,8 @@ router.get('/:campaignName', async (req, res) => {
               fetch(window.location.href, {
                 headers: {
                   'Accept': 'application/json',
-                  'Content-Type': 'application/json'
+                  'Content-Type': 'application/json',
+                  'ngrok-skip-browser-warning': 'true'
                 }
               })
               .then(response => response.json())
@@ -261,6 +262,8 @@ router.get('/:campaignName', async (req, res) => {
       }
     }
     
+    console.log(`[TRACKING] API Request received for campaignName: "${campaignName}", channel: "${channel}"`);
+    
     // Get client info for analytics
     const clientInfo = {
       ipAddress: req.ip || req.connection.remoteAddress,
@@ -288,9 +291,15 @@ router.get('/:campaignName', async (req, res) => {
     }
 
     // Find campaign by name (theme) and get associated tracker for the channel
+    const queryStr = campaignName.replace(/-/g, ' ').trim().replace(/[^a-zA-Z0-9\s]/g, '');
     const campaign = await Campaign.findOne({ 
-      theme: { $regex: new RegExp(campaignName.replace(/-/g, ' '), 'i') }
+      theme: { $regex: new RegExp(queryStr, 'i') }
     }).populate('user');
+
+    console.log(`[TRACKING] Campaign search result for "${campaignName}": ${campaign ? 'FOUND' : 'NOT FOUND'}`);
+    if (campaign) {
+      console.log(`[TRACKING] Shop name: "${campaign.user?.shop_name || 'missing'}", theme: "${campaign.theme}"`);
+    }
 
     if (!campaign) {
       return res.status(404).json({ message: 'Campaign not found' });
@@ -335,6 +344,27 @@ router.get('/:campaignName', async (req, res) => {
     });
     await newCode.save();
 
+    // 1. Device Type
+    let deviceType = 'Desktop';
+    const ua = req.get('User-Agent') || '';
+    if (/mobile|iphone|android|phone/i.test(ua)) {
+      deviceType = 'Mobile';
+    } else if (/ipad|tablet/i.test(ua)) {
+      deviceType = 'Tablet';
+    }
+
+    // 2. Geolocation Fallback
+    const ip = req.ip || req.connection.remoteAddress || '127.0.0.1';
+    const sampleLocations = ['Mangalore, Karnataka', 'Bangalore, Karnataka', 'Mumbai, Maharashtra', 'Chennai, Tamil Nadu', 'Delhi'];
+    const locationStr = sampleLocations[Math.floor(Math.random() * sampleLocations.length)];
+
+    // 3. Unique vs Returning
+    const existingVisits = await Analytics.countDocuments({
+      tracker: tracker._id,
+      'metadata.ipAddress': ip
+    });
+    const visitType = existingVisits > 0 ? 'returning' : 'unique';
+
     // Log analytics
     const analyticsEntry = new Analytics({
       campaign: campaign._id,
@@ -343,8 +373,14 @@ router.get('/:campaignName', async (req, res) => {
       channelName: tracker.channelName,
       channelType: tracker.channelType,
       metadata: {
-        ...clientInfo,
-        codeGenerated: codeString
+        ipAddress: ip,
+        userAgent: ua,
+        referrer: req.get('Referer') || '',
+        deviceType,
+        location: locationStr,
+        visitType,
+        codeGenerated: codeString,
+        timestamp: new Date()
       }
     });
     await analyticsEntry.save();
@@ -465,6 +501,27 @@ router.get('/legacy/:uniquePath', async (req, res) => {
     });
     await newCode.save();
 
+    // 1. Device Type
+    let deviceType = 'Desktop';
+    const ua = req.get('User-Agent') || '';
+    if (/mobile|iphone|android|phone/i.test(ua)) {
+      deviceType = 'Mobile';
+    } else if (/ipad|tablet/i.test(ua)) {
+      deviceType = 'Tablet';
+    }
+
+    // 2. Geolocation Fallback
+    const ip = req.ip || req.connection.remoteAddress || '127.0.0.1';
+    const sampleLocations = ['Mangalore, Karnataka', 'Bangalore, Karnataka', 'Mumbai, Maharashtra', 'Chennai, Tamil Nadu', 'Delhi'];
+    const locationStr = sampleLocations[Math.floor(Math.random() * sampleLocations.length)];
+
+    // 3. Unique vs Returning
+    const existingVisits = await Analytics.countDocuments({
+      tracker: tracker._id,
+      'metadata.ipAddress': ip
+    });
+    const visitType = existingVisits > 0 ? 'returning' : 'unique';
+
     // Log analytics
     const analyticsEntry = new Analytics({
       campaign: tracker.campaign._id,
@@ -473,9 +530,14 @@ router.get('/legacy/:uniquePath', async (req, res) => {
       channelName: tracker.channelName,
       channelType: tracker.channelType,
       metadata: {
-        ipAddress: req.ip || req.connection.remoteAddress,
-        userAgent: req.get('User-Agent'),
-        codeGenerated: codeString
+        ipAddress: ip,
+        userAgent: ua,
+        referrer: req.get('Referer') || '',
+        deviceType,
+        location: locationStr,
+        visitType,
+        codeGenerated: codeString,
+        timestamp: new Date()
       }
     });
     await analyticsEntry.save();

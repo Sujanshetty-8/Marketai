@@ -95,16 +95,24 @@ router.get('/campaign/:campaignId', authMiddleware, async (req, res) => {
       console.log(`  - Will Include: ${hasActivity || isRecentlyCreated}`);
       
       if (hasActivity || isRecentlyCreated) {
-        channelPerformance[tracker.channelName] = {
-          channelName: tracker.channelName,
-          channelType: tracker.channelType,
-          visits: tracker.visits,
-          conversions: actualConversions,
-          conversionRate: tracker.visits > 0 ? 
-            ((actualConversions / tracker.visits) * 100).toFixed(2) : 0,
-          trackingUrl: `https://collectivistic-kade-waggly.ngrok-free.dev/track/${campaign.theme.toLowerCase().replace(/\s+/g, '-')}?channel=${tracker.channelName}`,
-          qrCodeUrl: `https://api.qrserver.com/v1/create-qr-code/?size=300x300&data=https://collectivistic-kade-waggly.ngrok-free.dev/track/${campaign.theme.toLowerCase().replace(/\s+/g, '-')}?channel=${tracker.channelName}`
-        };
+        if (channelPerformance[tracker.channelName]) {
+          channelPerformance[tracker.channelName].visits += tracker.visits;
+          channelPerformance[tracker.channelName].conversions += actualConversions;
+          channelPerformance[tracker.channelName].conversionRate = 
+            channelPerformance[tracker.channelName].visits > 0 ? 
+            parseFloat(((channelPerformance[tracker.channelName].conversions / channelPerformance[tracker.channelName].visits) * 100).toFixed(2)) : 0;
+        } else {
+          channelPerformance[tracker.channelName] = {
+            channelName: tracker.channelName,
+            channelType: tracker.channelType,
+            visits: tracker.visits,
+            conversions: actualConversions,
+            conversionRate: parseFloat(tracker.visits > 0 ? 
+              ((actualConversions / tracker.visits) * 100).toFixed(2) : 0),
+            trackingUrl: `${process.env.NGROK_URL || 'http://localhost:3000'}/track/${campaign.theme.toLowerCase().replace(/\s+/g, '-')}?channel=${tracker.channelName}`,
+            qrCodeUrl: `https://api.qrserver.com/v1/create-qr-code/?size=300x300&data=${encodeURIComponent((process.env.NGROK_URL || 'http://localhost:3000') + '/track/' + campaign.theme.toLowerCase().replace(/\s+/g, '-') + '?channel=' + tracker.channelName)}`
+          };
+        }
       }
     }
     
@@ -147,6 +155,44 @@ router.get('/campaign/:campaignId', authMiddleware, async (req, res) => {
     const overallConversionRate = totalVisits > 0 ? 
       ((totalConversions / totalVisits) * 100).toFixed(2) : 0;
 
+    // Advanced tracking metrics calculations
+    let uniqueVisitors = 0;
+    let returningVisitors = 0;
+    const ipSet = new Set();
+    const deviceBreakdown = { Mobile: 0, Tablet: 0, Desktop: 0 };
+    const locationBreakdown = {};
+
+    analytics.forEach(event => {
+      if (event.eventType === 'visit') {
+        const meta = event.metadata || {};
+        
+        // Visitor separation
+        if (meta.visitType === 'unique') {
+          uniqueVisitors++;
+        } else if (meta.visitType === 'returning') {
+          returningVisitors++;
+        } else {
+          // Fallback if record is pre-migration
+          if (meta.ipAddress && !ipSet.has(meta.ipAddress)) {
+            uniqueVisitors++;
+            ipSet.add(meta.ipAddress);
+          } else if (meta.ipAddress) {
+            returningVisitors++;
+          } else {
+            uniqueVisitors++;
+          }
+        }
+
+        // Device Type separation
+        const dev = meta.deviceType || 'Desktop';
+        deviceBreakdown[dev] = (deviceBreakdown[dev] || 0) + 1;
+
+        // Location separation
+        const loc = meta.location || 'Karnataka, India';
+        locationBreakdown[loc] = (locationBreakdown[loc] || 0) + 1;
+      }
+    });
+
     // Top performing channels
     const topChannels = Object.values(channelPerformance)
       .sort((a, b) => b.conversions - a.conversions)
@@ -163,9 +209,13 @@ router.get('/campaign/:campaignId', authMiddleware, async (req, res) => {
       summary: {
         totalVisits,
         totalConversions,
+        uniqueVisitors,
+        returningVisitors,
         overallConversionRate: parseFloat(overallConversionRate),
         activeChannels: trackers.length
       },
+      deviceBreakdown,
+      locationBreakdown,
       channelPerformance: Object.values(channelPerformance),
       topChannels,
       dailyStats: Object.values(dailyStats),
@@ -276,14 +326,53 @@ router.get('/dashboard', authMiddleware, async (req, res) => {
         ((stats.conversions / stats.visits) * 100).toFixed(2) : 0;
     });
 
+    // Fetch all analytics for all user's campaigns
+    const allCampaignAnalytics = await Analytics.find({ campaign: { $in: campaignIds } });
+    
+    let uniqueVisitors = 0;
+    let returningVisitors = 0;
+    const ipSetDashboard = new Set();
+    const deviceBreakdown = { Mobile: 0, Tablet: 0, Desktop: 0 };
+    
+    allCampaignAnalytics.forEach(entry => {
+      if (entry.eventType === 'visit') {
+        const meta = entry.metadata || {};
+        if (meta.visitType === 'unique') {
+          uniqueVisitors++;
+        } else if (meta.visitType === 'returning') {
+          returningVisitors++;
+        } else {
+          // fallback
+          if (meta.ipAddress && !ipSetDashboard.has(meta.ipAddress)) {
+            uniqueVisitors++;
+            ipSetDashboard.add(meta.ipAddress);
+          } else if (meta.ipAddress) {
+            returningVisitors++;
+          } else {
+            uniqueVisitors++;
+          }
+        }
+        
+        const dev = meta.deviceType || 'Desktop';
+        deviceBreakdown[dev] = (deviceBreakdown[dev] || 0) + 1;
+      }
+    });
+
+    const repeatCustomerRate = totalVisits > 0 ? 
+      ((returningVisitors / totalVisits) * 100).toFixed(2) : 0;
+
     res.json({
       summary: {
         totalCampaigns: campaigns.length,
         totalVisits,
         totalConversions,
+        uniqueVisitors,
+        returningVisitors,
+        repeatCustomerRate: parseFloat(repeatCustomerRate),
         overallConversionRate: parseFloat(overallConversionRate),
         activeChannels: trackers.length
       },
+      deviceBreakdown,
       campaignPerformance: campaignPerformance.sort((a, b) => b.conversions - a.conversions),
       channelTypePerformance: Object.values(channelTypeStats),
       recentActivity: recentAnalytics.length

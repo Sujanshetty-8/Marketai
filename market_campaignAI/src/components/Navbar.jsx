@@ -30,6 +30,8 @@ const Navbar = () => {
 
           {/* Desktop Navigation */}
           <div className="hidden md:flex items-center space-x-6">
+            <button onClick={() => navigate('/dashboard')} className="text-gray-600 hover:text-blue-600 font-medium transition-colors">Dashboard</button>
+            <button onClick={() => navigate('/profile')} className="text-gray-600 hover:text-blue-600 font-medium transition-colors">Business Profile</button>
             {/* Welcome Message */}
             <div className="flex items-center bg-gradient-to-r from-blue-50 to-purple-50 px-4 py-2 rounded-2xl">
               <div className="w-8 h-8 bg-gradient-to-r from-blue-500 to-purple-500 rounded-full flex items-center justify-center mr-3">
@@ -74,7 +76,9 @@ const Navbar = () => {
         {/* Mobile Menu */}
         {isMenuOpen && (
           <div className="md:hidden border-t border-gray-100 py-4 animate-fadeInUp">
-            <div className="flex flex-col space-y-4">
+            <div className="flex flex-col space-y-4 px-2">
+              <button onClick={() => { navigate('/dashboard'); setIsMenuOpen(false); }} className="text-left text-gray-700 hover:text-blue-600 font-semibold py-2 px-3 hover:bg-slate-100 rounded-xl transition-all">Dashboard</button>
+              <button onClick={() => { navigate('/profile'); setIsMenuOpen(false); }} className="text-left text-gray-700 hover:text-blue-600 font-semibold py-2 px-3 hover:bg-slate-100 rounded-xl transition-all">Business Profile</button>
               {/* Welcome Message Mobile */}
               <div className="flex items-center bg-gradient-to-r from-blue-50 to-purple-50 px-4 py-3 rounded-2xl">
                 <div className="w-10 h-10 bg-gradient-to-r from-blue-500 to-purple-500 rounded-full flex items-center justify-center mr-3">

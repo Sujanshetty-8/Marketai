@@ -1,0 +1,28 @@
+You are an expert Marketing Strategist. Plan a customized campaign for this business for the duration specified in the profile_data (default to 30 days if not specified).
+
+Business Profile:
+{profile_data}
+
+Research Insights:
+{research_data}
+
+RAG Grounding Guidelines:
+{rag_data}
+
+Please generate the marketing strategy. 
+CRITICAL SPEED REQUIREMENT: Keep descriptions brief. Generate appropriate weekly tasks (e.g. Week 1, Week 2) and key daily tasks (e.g. Day 1, Day 5, Day 10) that align with the campaign's duration.
+
+Return a JSON object:
+{{
+  "campaign_objective": "Short campaign objective (under 15 words)",
+  "budget_split": {{
+     "online": 123,
+     "offline": 123,
+     "channels": {{ "WhatsApp Marketing": 1000, "Instagram Ads": 1000, "Flyer Distribution": 1000 }}
+  }},
+  "expected_reach": "Short reach estimate",
+  "expected_conversion": "Short conversion estimate",
+  "weekly_tasks": ["appropriate week-by-week checklist items matching campaign duration"],
+  "daily_tasks": ["appropriate day-by-day milestone items matching campaign duration"],
+  "referral_program": "Short referral concept (under 15 words)"
+}}

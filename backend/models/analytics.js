@@ -29,6 +29,9 @@ const analyticsSchema = new Schema({
     ipAddress: String,
     userAgent: String,
     referrer: String,
+    deviceType: String,
+    location: String,
+    visitType: String,
     timestamp: {
       type: Date,
       default: Date.now

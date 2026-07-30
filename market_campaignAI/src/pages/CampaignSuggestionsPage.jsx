@@ -8,209 +8,283 @@ const CampaignSuggestionsPage = () => {
   const location = useLocation();
   const [isVisible, setIsVisible] = useState(false);
   const [selectedChannels, setSelectedChannels] = useState([]);
+  const [activeTab, setActiveTab] = useState('explanation'); // explanation, timeline, suggestions
 
-  // Get campaign data and suggestions from navigation state or sessionStorage
+  // Load state
   const campaignData = location.state?.campaignData ||
     (sessionStorage.getItem('campaignData') ? JSON.parse(sessionStorage.getItem('campaignData')) : {});
   const suggestions = location.state?.suggestions ||
     (sessionStorage.getItem('campaignSuggestions') ? JSON.parse(sessionStorage.getItem('campaignSuggestions')) : []);
+  const explanation = sessionStorage.getItem('campaignExplanation') ? JSON.parse(sessionStorage.getItem('campaignExplanation')) : null;
+  const timeline = sessionStorage.getItem('campaignTimeline') ? JSON.parse(sessionStorage.getItem('campaignTimeline')) : null;
 
   useEffect(() => {
     setIsVisible(true);
 
-    // Debug: Log what we received
-    console.log('CampaignSuggestionsPage - Campaign Data:', campaignData);
-    console.log('CampaignSuggestionsPage - Suggestions:', suggestions);
-    console.log('CampaignSuggestionsPage - Suggestions length:', suggestions.length);
-
-    // If no data, redirect back to new campaign
     if (!campaignData.theme) {
       console.warn('No campaign theme found, redirecting to new-campaign');
       navigate('/new-campaign');
-    } else if (suggestions.length === 0) {
-      console.warn('No suggestions found, but staying on page to debug');
-      // Don't redirect immediately, let's see what's happening
     }
-  }, [campaignData, suggestions, navigate]);
+  }, [campaignData, navigate]);
 
   const handleChannelAdded = (channelData) => {
-    setSelectedChannels(prev => [...prev, channelData]);
+    // Add unique channels to selected state
+    setSelectedChannels(prev => {
+      const exists = prev.some(c => c.channel === channelData.channel);
+      if (exists) return prev;
+      return [...prev, channelData];
+    });
   };
 
   const handleContinue = () => {
     if (selectedChannels.length === 0) {
-      alert('Please select at least one channel to continue');
+      alert('Please select at least one channel to generate tracking assets.');
       return;
     }
 
-    // Store data in sessionStorage for persistence
-    sessionStorage.setItem('campaignSuggestions', JSON.stringify(suggestions));
-    sessionStorage.setItem('campaignData', JSON.stringify(campaignData));
     sessionStorage.setItem('selectedChannels', JSON.stringify(selectedChannels));
 
     navigate('/campaign-assets', {
       state: {
         campaignData,
         selectedChannels,
-        suggestions // Pass suggestions to assets page
+        suggestions
       }
     });
   };
 
   const handleBackToCampaign = () => {
-    navigate('/new-campaign', {
-      state: { campaignData }
-    });
+    navigate('/new-campaign');
   };
 
   return (
-    <div className="min-h-screen bg-gradient-to-br from-green-50 via-white to-blue-50">
+    <div className="min-h-screen bg-gradient-to-br from-purple-50 via-white to-green-50 text-gray-900 font-sans flex flex-col relative overflow-x-hidden">
       {/* Animated Background Elements */}
-      <div className="fixed inset-0 z-0">
-        <div className="absolute top-20 left-10 w-96 h-96 bg-green-100 rounded-full mix-blend-multiply filter blur-xl opacity-20 animate-blob"></div>
-        <div className="absolute top-40 right-10 w-96 h-96 bg-blue-100 rounded-full mix-blend-multiply filter blur-xl opacity-20 animate-blob" style={{ animationDelay: '2s' }}></div>
-        <div className="absolute -bottom-8 left-20 w-96 h-96 bg-purple-100 rounded-full mix-blend-multiply filter blur-xl opacity-20 animate-blob" style={{ animationDelay: '4s' }}></div>
+      <div className="fixed inset-0 z-0 pointer-events-none">
+        <div className="absolute top-20 right-10 w-96 h-96 bg-purple-100 rounded-full mix-blend-multiply filter blur-xl opacity-20 animate-blob"></div>
+        <div className="absolute top-40 left-10 w-96 h-96 bg-green-100 rounded-full mix-blend-multiply filter blur-xl opacity-20 animate-blob" style={{ animationDelay: "2s" }}></div>
+        <div className="absolute -bottom-8 right-20 w-96 h-96 bg-blue-100 rounded-full mix-blend-multiply filter blur-xl opacity-20 animate-blob" style={{ animationDelay: "4s" }}></div>
       </div>
 
       <Navbar />
 
-      <div className="relative z-10 max-w-7xl mx-auto py-8 sm:px-6 lg:px-8">
-        <div className="px-4 py-6 sm:px-0">
-          {/* Header */}
-          <div className={`mb-8 transform transition-all duration-1000 ${isVisible ? 'translate-y-0 opacity-100' : 'translate-y-10 opacity-0'}`}>
-            <div className="flex items-center justify-between mb-6">
-              <button
-                onClick={handleBackToCampaign}
-                className="flex items-center text-blue-600 hover:text-blue-800 group transition-colors duration-300"
-              >
-                <svg className="w-5 h-5 mr-2 group-hover:-translate-x-1 transition-transform duration-300" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M15 19l-7-7 7-7" />
-                </svg>
-                Back to Campaign Details
-              </button>
+      <div className="relative z-10 flex-1 max-w-7xl w-full mx-auto p-4 md:p-6 space-y-6">
+        
+        {/* Header Section */}
+        <div className={`transition-all duration-1000 ${isVisible ? 'translate-y-0 opacity-100' : 'translate-y-10 opacity-0'}`}>
+          <div className="flex flex-col md:flex-row md:items-center justify-between gap-4">
+            <div>
+              <h1 className="text-3xl font-extrabold bg-gradient-to-r from-blue-700 to-indigo-700 bg-clip-text text-transparent">
+                Campaign Strategy Board
+              </h1>
+              <p className="text-sm text-gray-600 mt-1">
+                Review your customized AI marketing proposal and select active channels.
+              </p>
+            </div>
+            
+            {/* Steps tracker */}
+            <div className="flex items-center space-x-2 bg-white/80 border border-gray-200 px-4 py-2 rounded-full text-xs font-semibold text-gray-600 shadow-sm h-fit">
+              <span className="text-emerald-600 font-bold">✓ Chat Profiler</span>
+              <span className="text-gray-300">→</span>
+              <span className="text-indigo-600 font-bold">2. Strategy suggestions</span>
+              <span className="text-gray-300">→</span>
+              <span className="text-gray-400">3. QR tracking assets</span>
+            </div>
+          </div>
+        </div>
 
-              {/* Progress Indicator */}
-              <div className="flex items-center space-x-4">
-                <div className="flex items-center">
-                  <div className="w-8 h-8 bg-green-500 text-white rounded-full flex items-center justify-center text-sm font-semibold">
-                    ✓
-                  </div>
-                  <span className="ml-2 text-sm font-medium text-green-600">Details</span>
+        {/* Campaign Metrics & Info Summary */}
+        <div className="grid grid-cols-1 md:grid-cols-4 gap-4">
+          {[
+            { label: 'Campaign Objective', val: campaignData.theme, icon: '🎯' },
+            { label: 'Budget allocated', val: `₹${campaignData.budget}`, icon: '💰' },
+            { label: 'Category Focus', val: campaignData.businessType || 'Retail', icon: '🏪' },
+            { label: 'Region / Location', val: campaignData.location || 'India', icon: '📍' }
+          ].map((stat, idx) => (
+            <div key={idx} className="bg-white/80 backdrop-blur-sm border border-gray-150 rounded-2xl p-4 flex items-center space-x-4 shadow-sm">
+              <div className="w-10 h-10 rounded-xl bg-purple-50 flex items-center justify-center text-lg">
+                {stat.icon}
+              </div>
+              <div className="overflow-hidden">
+                <span className="text-xs text-gray-500 font-semibold">{stat.label}</span>
+                <p className="text-sm font-semibold truncate text-gray-800">{stat.val}</p>
+              </div>
+            </div>
+          ))}
+        </div>
+
+        {/* Dashboard Tabs for Strategy Details */}
+        <div className="flex border-b border-gray-200">
+          {[
+            { id: 'explanation', label: 'AI Strategy Explanation', icon: '🛡️' },
+            { id: 'timeline', label: '30-Day Campaign Checklist', icon: '📅' },
+            { id: 'suggestions', label: 'Channel Copy Suggestions', icon: '✨' }
+          ].map(tab => (
+            <button
+              key={tab.id}
+              onClick={() => setActiveTab(tab.id)}
+              className={`flex items-center space-x-2 py-3 px-6 text-sm font-medium border-b-2 transition-all duration-300 ${
+                activeTab === tab.id
+                  ? 'border-indigo-600 text-indigo-600'
+                  : 'border-transparent text-gray-500 hover:text-gray-800'
+              }`}
+            >
+              <span>{tab.icon}</span>
+              <span>{tab.label}</span>
+            </button>
+          ))}
+        </div>
+
+        {/* Tab 1 Content: AI Strategy Explanation */}
+        {activeTab === 'explanation' && explanation && (
+          <div className="grid grid-cols-1 lg:grid-cols-3 gap-6 animate-fade-in">
+            <div className="lg:col-span-2 space-y-6">
+              <div className="bg-white/80 backdrop-blur-sm border border-gray-150 rounded-3xl p-6 shadow-sm">
+                <h3 className="text-lg font-bold text-gray-800 mb-3 flex items-center">
+                  💡 Why this recommendation?
+                </h3>
+                <p className="text-sm text-gray-600 leading-relaxed">
+                  {explanation.why_this_recommendation}
+                </p>
+              </div>
+
+              <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+                <div className="bg-white/80 backdrop-blur-sm border border-gray-150 rounded-3xl p-6 shadow-sm">
+                  <h3 className="text-sm font-bold text-emerald-600 mb-3 flex items-center">
+                    👍 Core Advantages
+                  </h3>
+                  <p className="text-sm text-gray-600 leading-relaxed">
+                    {explanation.advantages}
+                  </p>
                 </div>
-                <div className="w-8 h-0.5 bg-green-500"></div>
-                <div className="flex items-center">
-                  <div className="w-8 h-8 bg-blue-500 text-white rounded-full flex items-center justify-center text-sm font-semibold">
-                    2
-                  </div>
-                  <span className="ml-2 text-sm font-medium text-blue-600">Suggestions</span>
-                </div>
-                <div className="w-8 h-0.5 bg-gray-300"></div>
-                <div className="flex items-center">
-                  <div className="w-8 h-8 bg-gray-300 text-gray-600 rounded-full flex items-center justify-center text-sm font-semibold">
-                    3
-                  </div>
-                  <span className="ml-2 text-sm font-medium text-gray-500">Assets</span>
+                <div className="bg-white/80 backdrop-blur-sm border border-gray-150 rounded-3xl p-6 shadow-sm">
+                  <h3 className="text-sm font-bold text-rose-600 mb-3 flex items-center">
+                    ⚠️ Potential Risks
+                  </h3>
+                  <p className="text-sm text-gray-600 leading-relaxed">
+                    {explanation.possible_risks}
+                  </p>
                 </div>
               </div>
             </div>
 
-            <h1 className="text-4xl font-bold bg-gradient-to-r from-gray-900 to-gray-600 bg-clip-text text-transparent mb-2">
-              AI Campaign Suggestions
-            </h1>
-            <p className="text-xl text-gray-600">
-              Our AI has analyzed your campaign details and created personalized marketing suggestions
-            </p>
-          </div>
-
-          {/* Campaign Summary */}
-          <div className={`mb-8 transform transition-all duration-1000 ${isVisible ? 'translate-y-0 opacity-100' : 'translate-y-10 opacity-0'}`} style={{ transitionDelay: '200ms' }}>
-            <div className="bg-white/80 backdrop-blur-md rounded-3xl shadow-lg border border-white/20 p-6">
-              <div className="flex items-center mb-4">
-                <div className="w-10 h-10 bg-gradient-to-r from-green-500 to-blue-500 rounded-xl flex items-center justify-center mr-4">
-                  <span className="text-white text-lg">📋</span>
+            <div className="lg:col-span-1 space-y-6">
+              <div className="bg-gradient-to-br from-indigo-50 to-white border border-indigo-100 shadow-md rounded-3xl p-6 flex flex-col items-center justify-center text-center">
+                <h3 className="text-sm font-bold text-gray-500 uppercase tracking-wider mb-4">
+                  AI Confidence Score
+                </h3>
+                <div className="relative flex items-center justify-center h-32 w-32 mb-4">
+                  <div className="absolute inset-0 rounded-full border-4 border-gray-100"></div>
+                  <div className="absolute inset-0 rounded-full border-4 border-indigo-600 border-t-transparent border-r-transparent animate-spin-slow"></div>
+                  <span className="text-3xl font-extrabold text-indigo-700">
+                    {explanation.confidence_score}%
+                  </span>
                 </div>
-                <h2 className="text-xl font-bold text-gray-900">Campaign Summary</h2>
+                <p className="text-xs text-gray-500">
+                  Calculated based on hyper-local trends, location competitors, and RAG guidelines.
+                </p>
               </div>
-              <div className="grid md:grid-cols-3 gap-4 text-sm">
-                <div>
-                  <span className="font-semibold text-gray-700">Theme:</span>
-                  <p className="text-gray-600">{campaignData.theme}</p>
-                </div>
-                <div>
-                  <span className="font-semibold text-gray-700">Budget:</span>
-                  <p className="text-gray-600">₹{campaignData.budget}</p>
-                </div>
-                <div>
-                  <span className="font-semibold text-gray-700">Type:</span>
-                  <p className="text-gray-600 capitalize">{campaignData.campaignType}</p>
-                </div>
+
+              <div className="bg-white/80 backdrop-blur-sm border border-gray-150 rounded-3xl p-6 shadow-sm">
+                <h3 className="text-sm font-bold text-gray-700 mb-2">
+                  📈 Expected Conversion
+                </h3>
+                <p className="text-sm text-gray-600">
+                  {explanation.expected_outcome || '3-5% customer footfall increase.'}
+                </p>
               </div>
             </div>
           </div>
+        )}
 
-          {/* Suggestions */}
-          <div className={`mb-8 transform transition-all duration-1000 ${isVisible ? 'translate-y-0 opacity-100' : 'translate-y-10 opacity-0'}`} style={{ transitionDelay: '400ms' }}>
-            <SuggestionList
-              suggestions={suggestions}
-              onChannelAdded={handleChannelAdded}
-            />
-          </div>
-
-          {/* Selected Channels Summary */}
-          {selectedChannels.length > 0 && (
-            <div className={`mb-8 transform transition-all duration-1000 ${isVisible ? 'translate-y-0 opacity-100' : 'translate-y-10 opacity-0'}`} style={{ transitionDelay: '600ms' }}>
-              <div className="bg-white/80 backdrop-blur-md rounded-3xl shadow-lg border border-white/20 p-6">
-                <div className="flex items-center mb-4">
-                  <div className="w-10 h-10 bg-gradient-to-r from-purple-500 to-pink-500 rounded-xl flex items-center justify-center mr-4">
-                    <span className="text-white text-lg">✅</span>
+        {/* Tab 2 Content: 30-Day Timeline */}
+        {activeTab === 'timeline' && timeline && (
+          <div className="grid grid-cols-1 md:grid-cols-2 gap-6 animate-fade-in">
+            {/* Weekly Milestones */}
+            <div className="bg-white/80 backdrop-blur-sm border border-gray-150 rounded-3xl p-6 space-y-4 shadow-sm">
+              <h3 className="text-lg font-bold text-gray-800 flex items-center">
+                🗓️ Weekly Milestones
+              </h3>
+              <div className="space-y-3">
+                {timeline.weekly && timeline.weekly.map((task, idx) => (
+                  <div key={idx} className="flex items-start space-x-3 p-3 rounded-2xl bg-white border border-gray-100 shadow-sm">
+                    <span className="text-indigo-600 font-bold text-xs bg-indigo-50 px-2.5 py-1 rounded-full h-fit">
+                      W{idx + 1}
+                    </span>
+                    <span className="text-sm text-gray-700 leading-relaxed">{task}</span>
                   </div>
-                  <h2 className="text-xl font-bold text-gray-900">Selected Channels ({selectedChannels.length})</h2>
-                </div>
-                <div className="grid md:grid-cols-2 lg:grid-cols-3 gap-4">
+                ))}
+              </div>
+            </div>
+
+            {/* Daily Routine Tasks */}
+            <div className="bg-white/80 backdrop-blur-sm border border-gray-150 rounded-3xl p-6 space-y-4 shadow-sm">
+              <h3 className="text-lg font-bold text-gray-800 flex items-center">
+                📋 Daily Action Tasks
+              </h3>
+              <div className="space-y-3">
+                {timeline.daily && timeline.daily.map((task, idx) => (
+                  <div key={idx} className="flex items-start space-x-3 p-3 rounded-2xl bg-white border border-gray-100 shadow-sm">
+                    <span className="text-emerald-600 font-bold text-xs bg-emerald-50 px-2.5 py-1 rounded-full h-fit">
+                      Day
+                    </span>
+                    <span className="text-sm text-gray-700 leading-relaxed">{task}</span>
+                  </div>
+                ))}
+              </div>
+            </div>
+          </div>
+        )}
+
+        {/* Tab 3 Content: Suggestions & Selection */}
+        {activeTab === 'suggestions' && (
+          <div className="space-y-6 animate-fade-in">
+            <div className="bg-white/80 backdrop-blur-sm border border-gray-150 rounded-3xl p-6 shadow-sm">
+              <SuggestionList
+                suggestions={suggestions}
+                onChannelAdded={handleChannelAdded}
+              />
+            </div>
+
+            {selectedChannels.length > 0 && (
+              <div className="bg-indigo-50 border border-indigo-100 rounded-3xl p-6 shadow-sm">
+                <h3 className="text-lg font-bold text-indigo-900 mb-3 flex items-center">
+                  💡 Selected Channels ({selectedChannels.length})
+                </h3>
+                <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
                   {selectedChannels.map((channel, index) => (
-                    <div key={index} className="bg-gradient-to-r from-green-50 to-blue-50 rounded-2xl p-4 border border-green-200">
-                      <h3 className="font-semibold text-gray-900">{channel.channel || `Channel ${index + 1}`}</h3>
-                      <p className="text-sm text-gray-600 mt-1">Ready for asset generation</p>
+                    <div key={index} className="bg-white border border-indigo-200 rounded-2xl p-4 flex justify-between items-center shadow-sm">
+                      <div>
+                        <h4 className="font-semibold text-indigo-700">{channel.channel}</h4>
+                        <span className="text-xs text-gray-500">QR Code tracking enabled</span>
+                      </div>
+                      <span className="text-emerald-600 text-lg font-bold">✓</span>
                     </div>
                   ))}
                 </div>
               </div>
-            </div>
-          )}
-
-          {/* Action Buttons */}
-          <div className={`flex flex-col sm:flex-row gap-4 justify-between transform transition-all duration-1000 ${isVisible ? 'translate-y-0 opacity-100' : 'translate-y-10 opacity-0'}`} style={{ transitionDelay: '800ms' }}>
-            <button
-              onClick={handleBackToCampaign}
-              className="flex items-center justify-center px-8 py-4 border-2 border-gray-300 text-gray-700 font-semibold rounded-2xl hover:border-gray-400 hover:bg-gray-50 transition-all duration-300"
-            >
-              <svg className="w-5 h-5 mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M15 19l-7-7 7-7" />
-              </svg>
-              Edit Campaign Details
-            </button>
-
-            <button
-              onClick={handleContinue}
-              disabled={selectedChannels.length === 0}
-              className="group flex items-center justify-center px-8 py-4 bg-gradient-to-r from-green-600 to-blue-600 hover:from-green-700 hover:to-blue-700 disabled:from-gray-400 disabled:to-gray-500 text-white font-semibold rounded-2xl transition-all duration-300 transform hover:scale-105 shadow-lg hover:shadow-xl disabled:cursor-not-allowed disabled:transform-none"
-            >
-              Continue to Assets
-              <svg className="ml-2 w-5 h-5 group-hover:translate-x-1 transition-transform duration-300" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M13 7l5 5m0 0l-5 5m5-5H6" />
-              </svg>
-            </button>
+            )}
           </div>
+        )}
 
-          {/* Help Text */}
-          {selectedChannels.length === 0 && (
-            <div className={`mt-6 text-center transform transition-all duration-1000 ${isVisible ? 'translate-y-0 opacity-100' : 'translate-y-10 opacity-0'}`} style={{ transitionDelay: '1000ms' }}>
-              <p className="text-gray-500 text-sm">
-                💡 Select at least one channel above to continue to the next step
-              </p>
-            </div>
-          )}
+        {/* Action Panel Footer */}
+        <div className="flex flex-col sm:flex-row justify-between gap-4 pt-4 border-t border-gray-200">
+          <button
+            onClick={handleBackToCampaign}
+            className="px-6 py-4 border border-gray-300 hover:bg-gray-50 rounded-2xl text-sm font-semibold transition-all duration-300 text-gray-700 bg-white shadow-sm"
+          >
+            ← Restart Chat Consultation
+          </button>
+
+          <button
+            onClick={handleContinue}
+            disabled={selectedChannels.length === 0}
+            className="bg-indigo-600 hover:bg-indigo-500 text-white font-semibold py-4 px-8 rounded-2xl transition-all duration-300 transform hover:scale-102 disabled:opacity-50 disabled:cursor-not-allowed disabled:transform-none flex items-center justify-center shadow-md shadow-indigo-200"
+          >
+            Generate Tracking QR Codes →
+          </button>
         </div>
+
       </div>
     </div>
   );

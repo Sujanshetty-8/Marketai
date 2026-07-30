@@ -9,6 +9,7 @@ import CampaignAssetsPage from './pages/CampaignAssetsPage';
 import CustomerLandingPage from './pages/CustomerLandingPage';
 import DynamicLandingPage from './pages/DynamicLandingPage';
 import CampaignAnalyticsPage from './pages/CampaignAnalyticsPage';
+import BusinessProfilePage from './pages/BusinessProfilePage';
 import PrivateRoute from './components/PrivateRoute';
 
 function App() {
@@ -28,6 +29,14 @@ function App() {
           element={
             <PrivateRoute>
               <DashboardPage />
+            </PrivateRoute>
+          } 
+        />
+        <Route 
+          path="/profile" 
+          element={
+            <PrivateRoute>
+              <BusinessProfilePage />
             </PrivateRoute>
           } 
         />

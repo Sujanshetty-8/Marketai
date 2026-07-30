@@ -198,7 +198,7 @@ router.post('/add-channel', authMiddleware, async (req, res) => {
     
     // Generate QR code URL and tracking URL - use ngrok for mobile access
     const trackingId = require('nanoid').nanoid(8);
-    const ngrokUrl = 'https://collectivistic-kade-waggly.ngrok-free.dev';
+    const ngrokUrl = process.env.NGROK_URL || 'http://localhost:3000';
     const qrCodeUrl = `https://api.qrserver.com/v1/create-qr-code/?size=200x200&data=${ngrokUrl}/track/${trackingId}`;
     const trackingUrl = `${ngrokUrl}/track/${trackingId}`;
     
@@ -372,7 +372,7 @@ router.post('/generate-assets', authMiddleware, async (req, res) => {
       }
       
       // Generate QR code and tracking URL - use ngrok URL for mobile access
-      const ngrokUrl = 'https://collectivistic-kade-waggly.ngrok-free.dev';
+      const ngrokUrl = process.env.NGROK_URL || 'http://localhost:3000';
       const trackingUrl = `${ngrokUrl}/track/${campaignSlug}?channel=${channel.name}`;
       const qrCodeUrl = `https://api.qrserver.com/v1/create-qr-code/?size=300x300&data=${encodeURIComponent(trackingUrl)}`;
       

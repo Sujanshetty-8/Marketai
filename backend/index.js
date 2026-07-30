@@ -10,7 +10,7 @@ const app = express();
 // Replace this with your own database connection string
 // If local: 'mongodb://127.0.0.1:27017/campaignSparkDB'
 // If Atlas: Get the string from your Atlas dashboard
-const DB_URI = 'mongodb://127.0.0.1:27017/campaigndb';
+const DB_URI = process.env.MONGODB_URI || 'mongodb://127.0.0.1:27017/campaigndb';
 
 async function connectToDB() {
   try {
@@ -54,6 +54,12 @@ app.use('/api/stats', statsRoutes); // Plug in the stats route
 
 const analyticsRoutes = require('./routes/analytics_routes.js');
 app.use('/api/analytics', analyticsRoutes); // Plug in the analytics route
+
+const profileRoutes = require('./routes/profile_routes.js');
+app.use('/api/business-profile', profileRoutes); // Plug in the business profile route
+
+const aiRoutes = require('./routes/ai_routes.js');
+app.use('/api/ai', aiRoutes); // Plug in the AI agent routes
 
 
 // --- 6. Start the Server ---
