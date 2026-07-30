@@ -4,6 +4,8 @@ const authMiddleware = require('../middleware/auth_midware.js');
 const ChatSession = require('../models/chat_session.js');
 const BusinessProfile = require('../models/business_profile.js');
 const Campaign = require('../models/camp_model.js');
+const Tracker = require('../models/tracker.js');
+const DiscountCode = require('../models/discountcode.js');
 
 const PYTHON_SERVICE_URL = process.env.PYTHON_SERVICE_URL || 'http://127.0.0.1:8000';
 
@@ -204,6 +206,8 @@ router.post('/reset', authMiddleware, async (req, res) => {
     console.error('Reset chat session error:', err.message);
     res.status(500).send('Server Error');
   }
+});
+
 // @route   POST /api/ai/generate-plan
 // @desc    Generate a campaign plan in single-shot using manual details
 // @access  Private
@@ -235,6 +239,45 @@ router.post('/generate-plan', authMiddleware, async (req, res) => {
       return res.status(400).json({ message: 'End date must be after start date.' });
     }
 
+    // 1.5. Query previous campaigns and compile their performance statistics
+    const previousCampaigns = await Campaign.find({ user: req.user.id }).sort({ createdAt: -1 });
+    const previousCampaignsPerformance = [];
+
+    for (const camp of previousCampaigns) {
+      const trackers = await Tracker.find({ campaign: camp._id });
+      const channelMetrics = [];
+      let totalVisits = 0;
+      let totalConversions = 0;
+
+      for (const tracker of trackers) {
+        const actualConversions = await DiscountCode.countDocuments({
+          tracker: tracker._id,
+          status: 'redeemed'
+        });
+
+        channelMetrics.push({
+          channelName: tracker.channelName,
+          channelType: tracker.channelType,
+          visits: tracker.visits || 0,
+          conversions: actualConversions || 0,
+          conversionRate: tracker.visits > 0 ? parseFloat(((actualConversions / tracker.visits) * 100).toFixed(1)) : 0
+        });
+
+        totalVisits += tracker.visits || 0;
+        totalConversions += actualConversions || 0;
+      }
+
+      previousCampaignsPerformance.push({
+        campaignObjective: camp.theme,
+        offer: camp.offer,
+        budget: camp.budget,
+        totalVisits,
+        totalConversions,
+        conversionRate: totalVisits > 0 ? parseFloat(((totalConversions / totalVisits) * 100).toFixed(1)) : 0,
+        channels: channelMetrics
+      });
+    }
+
     // 2. Call Python FastAPI AI service
     const payload = {
       message: 'Generate marketing plan',
@@ -249,6 +292,7 @@ router.post('/generate-plan', authMiddleware, async (req, res) => {
         duration: `${durationDays} days`,
         goal: goal || '',
         usp: usp || '',
+        previous_campaigns: previousCampaignsPerformance, // Injected previous campaigns performance data!
         profile_completed: true // Skip chat profiling node LLM call
       }
     };

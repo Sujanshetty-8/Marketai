@@ -10,6 +10,7 @@ const DiscountCode = require('../models/discountcode.js');
 const Campaign = require('../models/camp_model.js');
 const User = require('../models/user_model.js');
 const Analytics = require('../models/analytics.js');
+const BusinessProfile = require('../models/business_profile.js');
 
 // Helper function to generate channel-specific code prefix
 const getChannelPrefix = (channelName) => {
@@ -385,10 +386,13 @@ router.get('/:campaignName', async (req, res) => {
     });
     await analyticsEntry.save();
 
+    // Fetch the business profile to get the USP
+    const businessProfile = await BusinessProfile.findOne({ user: campaign.user._id });
+
     // Prepare response data
     const responseData = {
       shopName: campaign.user.shop_name,
-      campaignName: campaign.theme,
+      campaignName: businessProfile && businessProfile.usp ? businessProfile.usp : campaign.theme,
       offer: campaign.offer,
       uniqueCode: codeString,
       validUntil: campaign.endDate.toISOString(),
@@ -545,9 +549,12 @@ router.get('/legacy/:uniquePath', async (req, res) => {
     const campaignDetails = tracker.campaign;
     const userDetails = campaignDetails.user;
 
+    // Fetch the business profile to get the USP
+    const businessProfile = await BusinessProfile.findOne({ user: userDetails._id });
+
     const responseData = {
       shopName: userDetails.shop_name,
-      campaignName: campaignDetails.theme,
+      campaignName: businessProfile && businessProfile.usp ? businessProfile.usp : campaignDetails.theme,
       offer: campaignDetails.offer,
       uniqueCode: codeString,
       validUntil: campaignDetails.endDate.toISOString(),

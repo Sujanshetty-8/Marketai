@@ -10,6 +10,7 @@ RAG Grounding Guidelines:
 {rag_data}
 
 Please generate the marketing strategy. 
+CRITICAL ANALYSIS REQUIREMENT: If the Business Profile contains previous campaign performance metrics ('previous_campaigns'), analyze which channels had the highest visits/conversions. Recommend doubling down on those successful methods (e.g., allocate more budget to high-conversion channels like WhatsApp) and suggest alternatives/adjustments for underperforming ones.
 CRITICAL SPEED REQUIREMENT: Keep descriptions brief. Generate appropriate weekly tasks (e.g. Week 1, Week 2) and key daily tasks (e.g. Day 1, Day 5, Day 10) that align with the campaign's duration.
 
 Return a JSON object:
