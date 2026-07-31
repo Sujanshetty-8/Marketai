@@ -5,7 +5,6 @@ import asyncio
 from typing import TypedDict, List, Dict, Any, Optional
 from langgraph.graph import StateGraph, END
 
-from langchain_ollama import ChatOllama
 from config import GOOGLE_API_KEY
 from utils.festival_engine import get_upcoming_festivals
 from utils.rag_engine import query_rag
@@ -27,6 +26,7 @@ def get_llm():
     else:
         # Fallback to local Ollama client running Qwen 2.5 3B
         print("Initializing local Ollama client (qwen2.5:3b)...")
+        from langchain_ollama import ChatOllama
         return ChatOllama(
             model="qwen2.5:3b",
             temperature=0.3,
