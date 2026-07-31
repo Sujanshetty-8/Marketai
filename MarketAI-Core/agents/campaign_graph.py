@@ -15,10 +15,10 @@ PROMPTS_DIR = os.path.join(os.path.dirname(os.path.dirname(__file__)), "prompts"
 def get_llm():
     if GOOGLE_API_KEY and GOOGLE_API_KEY.strip() != "":
         # Use high-speed Google Gemini API (resolves in ~1 second per node)
-        print("Initializing remote Gemini client (gemini-1.5-flash)...")
+        print("Initializing remote Gemini client (gemini-3.5-flash-lite)...")
         from langchain_google_genai import ChatGoogleGenerativeAI
         return ChatGoogleGenerativeAI(
-            model="gemini-1.5-flash",
+            model="gemini-3.5-flash-lite",
             google_api_key=GOOGLE_API_KEY,
             temperature=0.3,
             convert_system_message_to_human=True
