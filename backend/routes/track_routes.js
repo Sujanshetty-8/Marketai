@@ -52,7 +52,8 @@ router.get('/:campaignName', async (req, res) => {
     if (isBrowserRequest) {
       // For mobile access via ngrok, we need to serve the landing page directly
       // since the frontend might not be accessible from mobile
-      const frontendUrl = `http://localhost:5173/track/${campaignName}${channel ? `?channel=${channel}` : ''}`;
+      const frontendBase = process.env.FRONTEND_URL || 'http://localhost:5173';
+      const frontendUrl = `${frontendBase}/track/${campaignName}${channel ? `?channel=${channel}` : ''}`;
       
       // Check if this is a mobile/external request (via ngrok)
       const isExternalRequest = req.get('host')?.includes('ngrok') || req.get('host')?.includes('ngrok-free.dev');
