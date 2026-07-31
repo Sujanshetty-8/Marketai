@@ -97,7 +97,6 @@ zstandard==0.25.0
 
 # Deployed environment integrations
 langgraph==1.2.9
-langchain==0.3.27
 langchain-community==0.4.2
 langchain-ollama==1.1.0
 chromadb==1.0.20
