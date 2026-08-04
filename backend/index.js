@@ -45,7 +45,7 @@ app.use(express.json());
 
 // --- 4. Define a Basic Route ---
 app.get('/', (req, res) => {
-  res.send('Hello, CampaignSpark API is running!');
+  res.send('Hello, CampaignAI API is running!');
 });
 
 // --- 5. DEFINE YOUR API ROUTES ---

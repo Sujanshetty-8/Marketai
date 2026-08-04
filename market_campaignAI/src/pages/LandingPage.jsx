@@ -277,17 +277,7 @@ const LandingPage = () => {
                       "Share offers directly with your customer groups",
                     icon: "💬",
                   },
-                  {
-                    title: "Multi-language Support",
-                    description:
-                      "Create campaigns in Hindi, English, and regional languages",
-                    icon: "🌐",
-                  },
-                  {
-                    title: "Affordable Pricing",
-                    description: "Designed for small business budgets",
-                    icon: "💰",
-                  },
+              
                 ].map((benefit, index) => (
                   <div key={index} className="flex items-start group">
                     <div className="bg-white w-12 h-12 rounded-xl flex items-center justify-center mr-4 shadow-lg group-hover:scale-110 transition-transform duration-300">
@@ -356,35 +346,7 @@ const LandingPage = () => {
                 solutions that drive real results.
               </p>
             </div>
-            <div>
-              <h4 className="font-bold mb-6 text-lg">Product</h4>
-              <ul className="space-y-3 text-gray-400">
-                <li>
-                  <a
-                    href="#"
-                    className="hover:text-white transition-colors duration-300"
-                  >
-                    Features
-                  </a>
-                </li>
-                <li>
-                  <a
-                    href="#"
-                    className="hover:text-white transition-colors duration-300"
-                  >
-                    Pricing
-                  </a>
-                </li>
-                <li>
-                  <a
-                    href="#"
-                    className="hover:text-white transition-colors duration-300"
-                  >
-                    Templates
-                  </a>
-                </li>
-              </ul>
-            </div>
+            
             <div>
               <h4 className="font-bold mb-6 text-lg">Support</h4>
               <ul className="space-y-3 text-gray-400">
@@ -414,40 +376,11 @@ const LandingPage = () => {
                 </li>
               </ul>
             </div>
-            <div>
-              <h4 className="font-bold mb-6 text-lg">Company</h4>
-              <ul className="space-y-3 text-gray-400">
-                <li>
-                  <a
-                    href="#"
-                    className="hover:text-white transition-colors duration-300"
-                  >
-                    About Us
-                  </a>
-                </li>
-                <li>
-                  <a
-                    href="#"
-                    className="hover:text-white transition-colors duration-300"
-                  >
-                    Blog
-                  </a>
-                </li>
-                <li>
-                  <a
-                    href="#"
-                    className="hover:text-white transition-colors duration-300"
-                  >
-                    Careers
-                  </a>
-                </li>
-              </ul>
-            </div>
+            
           </div>
           <div className="border-t border-gray-800 mt-12 pt-8 text-center text-gray-400">
             <p>
-              &copy; 2024 Campaign AI. All rights reserved. Made with ❤️ for
-              Indian businesses.
+              &copy; 2026 Market-AI
             </p>
           </div>
         </div>
